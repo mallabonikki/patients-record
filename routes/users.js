@@ -87,12 +87,19 @@ router.post('/register', function(req, res, next) {
 
 });
 
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    console.log(username + password)
+  })
+);
+
 router.post(
   '/login', 
   passport.authenticate('local', { failureRedirect: '/users/login', failureFlash: 'Invalid username password' }),
   function(req, res) {
     console.log('Authentication successful')
     req.flash('success', 'You are logged in')
+    res.redirect('/')
   }
 );
 
