@@ -1,5 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var bcrypt = require('bcrypt')
+var passport = require('passport'), LocalStrategy = require('passport-local').Strategy;
+var provider = require('../provider')
 
 // var User = require('../models/user')
 
@@ -62,31 +65,35 @@ router.post('/register', function(req, res, next) {
     });
   } 
   else {
-    // var newUser = new User({
-    //   name: name,
-    //   email: email,
-    //   password: password,
-    //   profileimage: profileImageName
-    // });
 
-    // User.createUser(newUser, function(err, user) {
-    //   if (err) throw err
-    //   console.log(user)
-    // });
+    bcrypt.hash(password, 10, function(err, hash) {
+      if (err) throw err
+      password = hash
 
-    provider.db.addUser(name, email, password, profileImageName)
-      .then((err) => {
-        req.flash('success', 'You are now registered and may log in.')  
-      })
-      .catch(() => {
-        req.flash('danger', 'Error creating user in the database');
-        return 
-      })
-      .finally(provider.db.end())
+      provider.addUser(name, email, password, profileImageName)
+        .then((err) => {
+          req.flash('success', 'You are now registered and may log in.')  
+        })
+        .catch(() => {
+          req.flash('danger', 'Error creating user in the database');
+          return 
+        })
+    });
+
 
     res.location('/')
     res.redirect('/')
   }
+
 });
+
+router.post(
+  '/login', 
+  passport.authenticate('local', { failureRedirect: '/users/login', failureFlash: 'Invalid username password' }),
+  function(req, res) {
+    console.log('Authentication successful')
+    req.flash('success', 'You are logged in')
+  }
+);
 
 module.exports = router;
